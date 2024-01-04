@@ -204,7 +204,12 @@ class Game {
             _words = Array.from(Game.GlobalWords);
         }
         _words.push(...this.CustomWords);
-        
+
+        if(_words.length == this.OldWords.size){
+            this.OldWords.clear();
+            this.OldWords.add(this.Word);
+        }
+
         while(this.OldWords.has(this.Word)){
             this.Word = _words[randomInt( _words.length)];
         }
