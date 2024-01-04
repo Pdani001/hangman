@@ -1,0 +1,22 @@
+{
+    "name": "mokusors-hangman",
+    "version": "1.0.0",
+    "dependencies": {
+        "socket.io": "latest",
+        "uuid": "latest",
+        "express": "latest",
+        "body-parser": "latest",
+        "cookie-parser": "latest",
+        "grapheme-splitter": "latest"
+    },
+    "author": {
+        "name": "Pdani",
+        "url": "https://pdani.hu/"
+    },
+    "description": "A világ legrosszabb akasztófája xd",
+    "displayName": "Mókus Őrs akasztófa",
+    "devDependencies": {
+        "@types/express": "latest",
+        "@types/uuid": "latest"
+    }
+}
