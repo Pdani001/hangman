@@ -9,6 +9,7 @@ class Game {
     static splitter = new grapheme_splitter_1.default();
     static List = new Map();
     static GlobalWords = new Set();
+    static GlobalNicks = new Set();
     Id;
     IsPlaying = false;
     CustomWords = [];
@@ -45,6 +46,7 @@ class Game {
     Letters = new Map();
     Found = new Set();
     Miss = new Set();
+    OldWords = new Set();
     CurrentRound = 0;
     Countdown = 0;
     Timer = null;
@@ -182,13 +184,21 @@ class Game {
         this.Timer = null;
     }
     startGame(io) {
-        this.CurrentRound++;
+        if (this.CurrentRound == 0) {
+            this.OldWords.clear();
+        }
+        else {
+            this.OldWords.add(this.Word);
+        }
         let _words = [];
         if (!this.CustomOnly) {
             _words = Array.from(Game.GlobalWords);
         }
         _words.push(...this.CustomWords);
-        this.Word = _words[(0, node_crypto_1.randomInt)(_words.length)];
+        while (this.OldWords.has(this.Word)) {
+            this.Word = _words[(0, node_crypto_1.randomInt)(_words.length)];
+        }
+        this.CurrentRound++;
         this.nextPlayer(io);
         io.to(`game:${this.Id}`).emit("game:start", this.Info);
     }

@@ -7,6 +7,7 @@ class Game {
     private static readonly splitter = new GraphemeSplitter()
     static readonly List: Map<string,Game> = new Map();
     static readonly GlobalWords: Set<string> = new Set();
+    static readonly GlobalNicks: Set<string> = new Set();
     readonly Id: string;
     IsPlaying: boolean = false;
     CustomWords: string[] = [];
@@ -46,6 +47,7 @@ class Game {
     readonly Letters: Map<string,number[]> = new Map();
     readonly Found: Set<string> = new Set();
     readonly Miss: Set<string> = new Set();
+    readonly OldWords: Set<string> = new Set();
     CurrentRound: number = 0;
     Countdown: number = 0;
     Timer: NodeJS.Timeout = null;
@@ -191,14 +193,23 @@ class Game {
     }
 
     startGame(io: Server){
-        this.CurrentRound++;
+        if(this.CurrentRound == 0){
+            this.OldWords.clear();
+        } else {
+            this.OldWords.add(this.Word);
+        }
+
         let _words: string[] = [];
         if(!this.CustomOnly){
             _words = Array.from(Game.GlobalWords);
         }
         _words.push(...this.CustomWords);
+        
+        while(this.OldWords.has(this.Word)){
+            this.Word = _words[randomInt( _words.length)];
+        }
 
-        this.Word = _words[randomInt( _words.length)];
+        this.CurrentRound++;
 
         this.nextPlayer(io);
         io.to(`game:${this.Id}`).emit("game:start",this.Info);

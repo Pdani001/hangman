@@ -23,6 +23,15 @@ fs.readFileSync('words.txt', 'utf8').split(/\r?\n/).forEach((w)=>{
 });
 console.log(`Loaded and registered ${Game.GlobalWords.size} global words`);
 
+console.log("Loading random nicks...")
+fs.readFileSync('nicks.txt', 'utf8').split(/\r?\n/).forEach((w)=>{
+  if(w.trim().length == 0 || w.startsWith("#")){
+    return;
+  }
+  Game.GlobalNicks.add(w);
+});
+console.log(`Loaded and registered ${Game.GlobalNicks.size} random nicks`);
+
 const postEventsPath = path.join(__dirname, 'events', 'post');
 const postEventFiles = fs.readdirSync(postEventsPath).filter(file => file.endsWith('.js') && !file.startsWith('!'));
 

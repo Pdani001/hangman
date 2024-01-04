@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js" integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N" crossorigin="anonymous" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jcanvas/21.0.1/min/jcanvas.min.js" integrity="sha512-pu2L+33GBCuTrTU3mNJphG2Hm2JKlLA01280LIiz29D40f/UFOU5dEVxVuW46p+HZeZhXvQsUxtVFxPabX9S9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-mZLF4UVrpi/QTWPA7BjNPEnkIfRFn4ZEO3Qt/HFklTJBj/gBOV8G3HcKn4NfQblz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
     <script src="hangman.js"></script>
     <script>
         function updateCheckbox(element){
@@ -22,6 +23,7 @@
         let Socket = null;
         let Volume = 100;
         $(function(){
+            $("#nickname").val(Cookies.get("nickname") || "");
             $("#gameCode").val($("#gameCode").data("hover"));
             $(document).on('keypress',function(e) {
                 if(e.which == 13 && $("#chat").is(":focus")) {
@@ -78,6 +80,7 @@
                 PlayerData = {
                     Nickname: $("#nickname").val().trim()
                 };
+                Cookies.set('nickname', $("#nickname").val().trim(), { expires: 7 });
                 $("#join-container").find("input, button").prop("disabled",true);
                 Socket = createGameSocket();
             });
@@ -86,6 +89,7 @@
                     Nickname: $("#nickname").val().trim(),
                     Create: true
                 };
+                Cookies.set('nickname', $("#nickname").val().trim(), { expires: 7 });
                 $("#join-container").find("input, button").prop("disabled",true);
                 Socket = createGameSocket();
             });

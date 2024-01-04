@@ -10,6 +10,7 @@ let AudioData = {
     gameOver: new Audio(location.origin+"/sfx/gameOver.wav"),
     gameStart: new Audio(location.origin+"/sfx/gameStart.wav"),
     wordFound: new Audio(location.origin+"/sfx/wordFound.wav"),
+    nextPlayer: new Audio(location.origin+"/sfx/nextPlayer.wav"),
 };
 
 function createGameSocket(){
@@ -132,6 +133,8 @@ function createGameSocket(){
         GameData.CurrentPlayer = args[0];
         $("#player-"+GameData.CurrentPlayer.Id).addClass("active");
         if(GameData.CurrentPlayer?.Id == PlayerData.Id){
+            AudioData.nextPlayer.currentTime = 0;
+            AudioData.nextPlayer.play();
             $("#chat").addClass("border-danger-subtle border-2").prop("placeholder","Írj be egy betűt!");
             $("#chat").focus();
         }
@@ -272,7 +275,7 @@ function createGameSocket(){
 
 function addChat(message, _class = ""){
     $("#chat-field").append(`<p class="${_class}">${message}</p>`);
-    $("#chat-field").scrollTop($(this).height()); 
+    $("#chat-field").scrollTop($("#chat-field").prop('scrollHeight')); 
 }
 
 function drawLetters(){
