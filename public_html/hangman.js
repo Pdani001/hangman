@@ -1,3 +1,103 @@
+function updateCheckbox(element){
+    if(!(this instanceof Window))
+        element = this;
+    $(element).next("label").text($(element).is(":checked") ? _LN['switch_true'] : _LN['switch_false'])
+    .addClass(!$(element).is(":checked")?"btn-danger":"btn-success")
+    .removeClass($(element).is(":checked")?"btn-danger":"btn-success");
+}
+let Socket = null;
+let Volume = 100;
+$(document).on("launch_game",function(){
+    $("#nickname").val(Cookies.get("nickname") || "");
+    $("#gameCode").data("hover",_LN[$("#gameCode").data("ln")])
+    $(document).on('keypress',function(e) {
+        if(e.which == 13 && $("#chat").is(":focus")) {
+            if($("#chat").val().trim().length == 0 || $("#chat").val().trim().length > 100)
+                return;
+            Socket.send($("#chat").val());
+            $("#chat").val("");
+        }
+    });
+    $("input[type='checkbox']").change(updateCheckbox);
+    $("#gameCode").on( "mouseenter", function(){
+        $(this).val(location.origin+location.pathname+"?"+GameData.Id);
+        $(this).select();
+    } ).on( "mouseleave", function(){
+        $(this).val($(this).data("hover"));
+    } );
+    $("#waitBetweenPlayers").change(function(){
+        if(GameData.Owner.Id == PlayerData.Id)
+            Socket.emit("game:change","waitBetweenPlayers",$(this).is(":checked"));
+    });
+    $("#customWordsOnly").change(function(){
+        if(GameData.Owner.Id == PlayerData.Id)
+            Socket.emit("game:change","customWordsOnly",$(this).is(":checked"));
+    });
+    $("#guessTime").change(function(){
+        if(GameData.Owner.Id == PlayerData.Id)
+            Socket.emit("game:change","guessTime",$(this).val());
+    });
+    $("#rounds").change(function(){
+        if(GameData.Owner.Id == PlayerData.Id)
+            Socket.emit("game:change","rounds",$(this).val());
+    });
+    $("#language").change(function(){
+        if(GameData.Owner.Id == PlayerData.Id)
+            Socket.emit("game:change","language",$(this).val());
+    });
+    
+    $("#startGame").click(function(){
+        if(GameData.Owner.Id == PlayerData.Id)
+            Socket.emit("game:start");
+    });
+
+    let timer = null;
+    $("#customWords").on('keyup', function(e) {
+        clearTimeout(timer);
+        let value = $(this).val();
+        timer = setTimeout(function(){
+            Socket.emit("game:change","customWords",value);
+        }, 600);
+    });
+
+    $("#customWords").on('keydown', function(e) {
+        clearTimeout(timer);
+    });
+
+
+    $("#joinGame").click(function(){
+        PlayerData = {
+            Nickname: $("#nickname").val().trim()
+        };
+        Cookies.set('nickname', $("#nickname").val().trim(), { expires: 7 });
+        $("#join-container").find("input, button").prop("disabled",true);
+        Socket = createGameSocket();
+        $("#loading-container").show().addClass("d-flex");
+    });
+    $("#createGame").click(function(){
+        PlayerData = {
+            Nickname: $("#nickname").val().trim(),
+            Create: true
+        };
+        Cookies.set('nickname', $("#nickname").val().trim(), { expires: 7 });
+        $("#join-container").find("input, button").prop("disabled",true);
+        Socket = createGameSocket();
+        $("#loading-container").show().addClass("d-flex");
+    });
+    $("#settings").click(function(){
+        $("#settingsModal").modal("show");
+    });
+    $("#volumeRange").on('input',function(){
+        Volume = $(this).val();
+        $(this).prev("label").text(_LN['label_volume'].format(Volume));
+        AudioData.click.currentTime = 0;
+        AudioData.click.volume = Volume/100;
+        AudioData.click.play();
+    });
+    $("#volumeRange").prev("label").text(_LN['label_volume'].format(100));
+    $("#loading-container").hide().removeClass("d-flex");
+});
+
 let PlayerData = null;
 let GameData = null;
 let AudioData = {
@@ -14,7 +114,7 @@ let AudioData = {
 };
 
 function createGameSocket(){
-    const socket = io();
+    const socket = io({query: {lang:_LANG}});
     socket.on("connect", () => {
         $("#gameCode").val($("#gameCode").data("hover"));
         socket.emit("set-nick", PlayerData?.Nickname);
@@ -23,6 +123,7 @@ function createGameSocket(){
         if(reason != "ping timeout"){
             socket.disconnect();
             socket.removeAllListeners();
+            $("#loading-container").show().addClass("d-flex");
             $("#join-container").show();
             $("#game-container").hide();
             $("#join-container").find("input, button").prop("disabled",false);
@@ -36,6 +137,7 @@ function createGameSocket(){
         PlayerData = args[0];
         if(GameData != null)
             return;
+        $("#loading-container").hide().removeClass("d-flex");
         if(create){
             socket.emit("create-game");
             return;
@@ -53,6 +155,8 @@ function createGameSocket(){
         $("#game-container").show();
         $("#settings-field").find(".game-control").prop("disabled",GameData.Owner.Id != PlayerData.Id);
 
+        $("#language").val(GameData.WordLanguage);
+
         $("#waitBetweenPlayers").prop("checked",GameData.DelayNextPlayer);
         updateCheckbox("#waitBetweenPlayers");
         $("#customWordsOnly").prop("checked",GameData.CustomOnly);
@@ -63,10 +167,10 @@ function createGameSocket(){
 
         $("#player-list").html("");
         for(let player of GameData.Players){
-            let isYou = player.Id == PlayerData.Id ? " (te)" : "";
-            $("#player-list").append($.parseHTML(`<div class="p-2 mb-2 bg-warning player-container" id="player-${player.Id}">
-            <p class="mb-0 border-bottom border-2 border-danger">${player.Nickname}${isYou}</p>
-            <span class="text-danger">${player.Points} pont</span>
+            let isYou = player.Id == PlayerData.Id;
+            $("#player-list").append($.parseHTML(`<div class="p-2 mb-2 bg-warning player-container ${isYou ? "self" : ""}" id="player-${player.Id}">
+            <p class="mb-0 border-bottom border-2 border-danger">${player.Nickname}${isYou ? ` (${_LN['player_self']})` : ""}</p>
+            <span class="text-danger">${_LN['player_points'].format(player.Points)}</span>
         </div>`));
         }
 
@@ -74,8 +178,8 @@ function createGameSocket(){
         AudioData.playerJoin.volume = Volume/100;
         AudioData.playerJoin.play();
 
+        $("#roundDisplay").text(`${GameData.CurrentRound}/${GameData.MaxRounds}`);
         if(GameData.IsPlaying){
-            $("#roundDisplay").text(`Kör ${GameData.CurrentRound}/${GameData.MaxRounds}`);
             $("#playing-field").show();
             $("#settings-field").hide();
             for(let prog = 0; prog <= GameData.Miss.length; prog++){
@@ -93,6 +197,9 @@ function createGameSocket(){
     socket.on("game:change", (...args) => {
         GameData = args[0];
 
+        $("#roundDisplay").text(`${GameData.CurrentRound}/${GameData.MaxRounds}`);
+        $("#language").val(GameData.WordLanguage);
+
         if(GameData.Owner.Id == PlayerData.Id)
             return;
 
@@ -107,7 +214,7 @@ function createGameSocket(){
     socket.on("game:start", (...args) => {
         GameData = args[0];
 
-        $("#roundDisplay").text(`Kör ${GameData.CurrentRound}/${GameData.MaxRounds}`);
+        $("#roundDisplay").text(`${GameData.CurrentRound}/${GameData.MaxRounds}`);
 
         $("#playing-field").show();
         $("#settings-field").hide();
@@ -135,7 +242,7 @@ function createGameSocket(){
         if(GameData.CurrentPlayer?.Id == PlayerData.Id){
             AudioData.nextPlayer.currentTime = 0;
             AudioData.nextPlayer.play();
-            $("#chat").addClass("border-danger-subtle border-2").prop("placeholder","Írj be egy betűt!");
+            $("#chat").addClass("border-danger-subtle border-2").prop("placeholder",_LN['placeholder_current_player_help']);
             $("#chat").focus();
         }
     });
@@ -148,19 +255,17 @@ function createGameSocket(){
         let error = args[0];
         switch(error){
             case "too-few-players":
-                addChat("Nincs elegendő játékos az indításhoz!", "border border-1 border-danger");
-                break;
             case "too-few-custom":
-                addChat("Kevesebb, mint 5 egyedi szó van!", "border border-1 border-danger");
+                addChat(_LN["game_error_"+error], "border border-1 border-danger");
                 break;
             case "found-has":
             case "miss-has":
-                addChat("Ez a betű már szerepel a táblán!", "border border-1 border-secondary");
+                addChat(_LN["game_error_"+error], "border border-1 border-secondary");
                 break;
             case "chat-limit-exceeded":
                 break;
             default:
-                addChat(`Ismeretlen játékhiba (${error})`, "border border-1 border-danger");
+                addChat(_LN['game_error_unknown'].format(error), "border border-1 border-danger");
                 break;
         }
     });
@@ -172,7 +277,7 @@ function createGameSocket(){
         $("#playing-field").hide();
         $("#settings-field").show();
         $("#timer").text("0");
-        $("#roundDisplay").text(`Kör 0/0`);
+        $("#roundDisplay").text(`${GameData.CurrentRound}/${GameData.MaxRounds}`);
         $(".player-container").removeClass("active");
         $("#chat").removeClass("border-danger-subtle border-2").prop("placeholder","");
     });
@@ -180,7 +285,7 @@ function createGameSocket(){
         GameData.Owner = args[0];
         if(GameData.Owner.Id == PlayerData.Id){
             $("#settings-field").find(".game-control").prop("disabled",false);
-            addChat(`Te vagy az új játékvezető!`, "border border-1 border-primary");
+            addChat(_LN['chat_new_host'], "border border-1 border-primary");
         }
     });
     socket.on("game:letterMiss", (...args) => {
@@ -208,7 +313,7 @@ function createGameSocket(){
         let obj = args[0];
         GameData.Letters = obj.letters;
         GameData.StyledLetters = obj.styled;
-        $("#player-"+obj.player.Id).find("span").text(obj.player.Points+" pont");
+        $("#player-"+obj.player.Id).find("span").text(_LN['player_points'].format(obj.player.Points));
         drawLetters();
         AudioData.letterFound.currentTime = 0;
         AudioData.letterFound.volume = Volume/100;
@@ -218,7 +323,7 @@ function createGameSocket(){
         let obj = args[0];
         GameData.Letters = obj.letters;
         GameData.StyledLetters = obj.styled;
-        $("#player-"+obj.player.Id).find("span").text(obj.player.Points+" pont");
+        $("#player-"+obj.player.Id).find("span").text(_LN['player_points'].format(obj.player.Points));
         drawLetters();
         AudioData.wordFound.currentTime = 0;
         AudioData.wordFound.volume = Volume/100;
@@ -229,10 +334,10 @@ function createGameSocket(){
         let error = args[0];
         switch(error){
             case "not-owner":
-                addChat("Ezt csak a játékvezető teheti meg!", "border border-1 border-danger");
+                addChat(_LN["self_error_"+error], "border border-1 border-danger");
                 break;
             default:
-                addChat(`Ismeretlen hiba (${error})`, "border border-1 border-danger");
+                addChat(_LN["self_error_unknown"].format(error), "border border-1 border-danger");
                 break;
         }
     });
@@ -241,9 +346,9 @@ function createGameSocket(){
         let player = args[0];
         $("#player-list").append($.parseHTML(`<div class="p-2 mb-2 bg-warning player-container" id="player-${player.Id}">
             <p class="mb-0 border-bottom border-2 border-danger">${player.Nickname}</p>
-            <span class="text-danger">${player.Points} pont</span>
+            <span class="text-danger">${_LN['player_points'].format(player.Points)}</span>
         </div>`));
-        addChat(`${player.Nickname} csatlakozott.`, "border border-1 border-info");
+        addChat(_LN['chat_player_join'].format(player.Nickname), "border border-1 border-info");
         AudioData.playerJoin.currentTime = 0;
         AudioData.playerJoin.volume = Volume/100;
         AudioData.playerJoin.play();
@@ -251,14 +356,14 @@ function createGameSocket(){
     socket.on("player:leave", (...args) => {
         let player = args[0];
         $("#player-"+player.Id).remove();
-        addChat(`${player.Nickname} kilépett.`, "border border-1 border-info");
+        addChat(_LN['chat_player_leave'].format(player.Nickname), "border border-1 border-info");
         AudioData.playerLeave.currentTime = 0;
         AudioData.playerLeave.volume = Volume/100;
         AudioData.playerLeave.play();
     });
     socket.on("player:update", (...args) => {
         let player = args[0];
-        let isYou = player.Id == PlayerData.Id ? " (te)" : "";
+        let isYou = player.Id == PlayerData.Id ? ` (${_LN['player_self']})` : "";
         $("#player-"+player.Id).find("p").text(player.Nickname+isYou);
     });
     socket.on("message", (...args) => {
@@ -296,22 +401,23 @@ function drawLetters(){
             styled[pos] = letter;
         }
     });
-    let first = 0;
+    let length = 0;
     for (let pos = 0; pos < array.length; pos++) {
         const letter = array[pos];
         if(letter == " "){
             $("#word-display").append(` `);
             continue;
         }
+        length++;
         const next = array[pos+1] || "";
         const styledLetter = styled[pos] == letter ? letter.toUpperCase() : letter;
         $("#word-display").append(`<span>${styledLetter}</span>`);
         if(next == " "){
-            first = pos+1;
-            $("#word-display").append(`<sub class="fs-6 me-3 user-select-none">${first}</sub>`);
+            $("#word-display").append(`<sub class="fs-6 me-3 user-select-none">${length}</sub>`);
+            length = 0;
         }
     }
-    $("#word-display").append(`<sub class="fs-6 user-select-none">${array.length-first}</sub>`);
+    $("#word-display").append(`<sub class="fs-6 user-select-none">${length}</sub>`);
 }
 
 function drawMisses(){
@@ -336,6 +442,16 @@ function progressGame(code){
                 x2: 290, y2: 280
             });
             break;
+        case 10:
+            $('canvas').drawText({
+                strokeStyle: '#b02a37',
+                fillStyle: '#dc3545',
+                strokeWidth: 2,
+                x: 150, y: 250,
+                fontSize: 48,
+                fontFamily: 'Verdana, sans-serif',
+                text: 'Game Over'
+            });
         case 1:
         case 2:
         case 3:
@@ -345,22 +461,10 @@ function progressGame(code){
         case 7:
         case 8:
         case 9:
-        case 10:
             $('canvas').drawImage({
                 source: 'img/'+code+'.png',
                 x: 150, y: 145
             });
-            if(code == 10){
-                $('canvas').drawText({
-                    strokeStyle: '#b02a37',
-                    fillStyle: '#dc3545',
-                    strokeWidth: 2,
-                    x: 150, y: 250,
-                    fontSize: 48,
-                    fontFamily: 'Verdana, sans-serif',
-                    text: 'Game Over'
-                });
-            }
             break;
     }
 }

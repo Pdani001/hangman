@@ -7,6 +7,7 @@ class Player {
     Socket;
     Points = 0;
     GameId;
+    Language;
     constructor(socket, nick) {
         this.Id = (0, uuid_1.v4)().split("-")[0];
         socket['Player'] = this.Id;
@@ -18,7 +19,8 @@ class Player {
         return {
             Id: this.Id,
             Nickname: this.Nickname,
-            Points: this.Points
+            Points: this.Points,
+            Language: this.Language
         };
     }
 }

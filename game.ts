@@ -6,8 +6,8 @@ import { randomInt } from 'node:crypto';
 class Game {
     private static readonly splitter = new GraphemeSplitter()
     static readonly List: Map<string,Game> = new Map();
-    static readonly GlobalWords: Set<string> = new Set();
-    static readonly GlobalNicks: Set<string> = new Set();
+    static readonly GlobalWords: Map<string,Set<string>> = new Map();
+    static readonly GlobalNicks: Map<string,Set<string>> = new Map();
     readonly Id: string;
     IsPlaying: boolean = false;
     CustomWords: string[] = [];
@@ -15,6 +15,7 @@ class Game {
     GuessTime: number = 15;
     MaxRounds: number = 1;
     DelayNextPlayer: boolean = true;
+    WordLanguage: string = "hu";
 
     private _Word : string = null;
     public get Word() : string {
@@ -94,6 +95,7 @@ class Game {
             GuessTime: this.GuessTime,
             MaxRounds: this.MaxRounds,
             DelayNextPlayer: this.DelayNextPlayer,
+            WordLanguage: this.WordLanguage,
             Letters: [..._letters],
             StyledLetters: [..._styled],
             Miss: [...this.Miss],
@@ -201,7 +203,7 @@ class Game {
 
         let _words: string[] = [];
         if(!this.CustomOnly){
-            _words = Array.from(Game.GlobalWords);
+            _words = Array.from(Game.GlobalWords.get(this.WordLanguage));
         }
         _words.push(...this.CustomWords);
 
@@ -210,6 +212,7 @@ class Game {
             this.OldWords.add(this.Word);
         }
 
+        this.Word = _words[randomInt( _words.length)];
         while(this.OldWords.has(this.Word)){
             this.Word = _words[randomInt( _words.length)];
         }

@@ -39,6 +39,11 @@ module.exports = {
             case "rounds":
                 game.MaxRounds = !Number.isSafeInteger(Number(args[1])) ? 1 : Number(args[1]);
                 break;
+            case "language":
+                game.WordLanguage = args[1].trim();
+                if (!game_1.default.GlobalWords.has(game.WordLanguage))
+                    game.WordLanguage = "en";
+                break;
             default:
                 return;
         }

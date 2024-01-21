@@ -8,8 +8,8 @@ const node_crypto_1 = require("node:crypto");
 class Game {
     static splitter = new grapheme_splitter_1.default();
     static List = new Map();
-    static GlobalWords = new Set();
-    static GlobalNicks = new Set();
+    static GlobalWords = new Map();
+    static GlobalNicks = new Map();
     Id;
     IsPlaying = false;
     CustomWords = [];
@@ -17,6 +17,7 @@ class Game {
     GuessTime = 15;
     MaxRounds = 1;
     DelayNextPlayer = true;
+    WordLanguage = "hu";
     _Word = null;
     get Word() {
         return this._Word;
@@ -89,6 +90,7 @@ class Game {
             GuessTime: this.GuessTime,
             MaxRounds: this.MaxRounds,
             DelayNextPlayer: this.DelayNextPlayer,
+            WordLanguage: this.WordLanguage,
             Letters: [..._letters],
             StyledLetters: [..._styled],
             Miss: [...this.Miss],
@@ -192,13 +194,14 @@ class Game {
         }
         let _words = [];
         if (!this.CustomOnly) {
-            _words = Array.from(Game.GlobalWords);
+            _words = Array.from(Game.GlobalWords.get(this.WordLanguage));
         }
         _words.push(...this.CustomWords);
         if (_words.length == this.OldWords.size) {
             this.OldWords.clear();
             this.OldWords.add(this.Word);
         }
+        this.Word = _words[(0, node_crypto_1.randomInt)(_words.length)];
         while (this.OldWords.has(this.Word)) {
             this.Word = _words[(0, node_crypto_1.randomInt)(_words.length)];
         }

@@ -14,6 +14,7 @@ module.exports = {
             return;
         }
         const game = new Game(player);
+        game.WordLanguage = Game.GlobalWords.has(player.Language) ? player.Language : "en";
         player.GameId = game.Id;
         game.Players.add(player);
         socket.emit("game:info",game.Info);

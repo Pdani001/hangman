@@ -10,27 +10,50 @@ const web = express();
 const Game = require("./game");
 const Player = require('./player');
 
-console.log("Loading global words...")
-fs.readFileSync('words.txt', 'utf8').split(/\r?\n/).forEach((w)=>{
-  if(w.trim().length == 0 || w.startsWith("#")){
-    return;
-  }
-  if(w.includes("_")){
-    console.log(`[WARNING] ${w} is not a valid word`);
-    return;
-  }
-  Game.GlobalWords.add(w);
-});
-console.log(`Loaded and registered ${Game.GlobalWords.size} global words`);
 
-console.log("Loading random nicks...")
-fs.readFileSync('nicks.txt', 'utf8').split(/\r?\n/).forEach((w)=>{
-  if(w.trim().length == 0 || w.startsWith("#")){
-    return;
-  }
-  Game.GlobalNicks.add(w);
-});
-console.log(`Loaded and registered ${Game.GlobalNicks.size} random nicks`);
+console.log("Loading global words...");
+let gWords = 0;
+const wordsPath = path.join(__dirname, 'words');
+const wordsFiles = fs.readdirSync(wordsPath).filter(file => file.endsWith('.txt') && !file.startsWith('!'));
+for (const file of wordsFiles) {
+  const filePath = path.join(wordsPath, file);
+  const lang = file.replace(".txt","");
+  const words = new Set();
+  fs.readFileSync(filePath, 'utf8').split(/\r?\n/).forEach((w)=>{
+    if(w.trim().length == 0 || w.startsWith("#")){
+      return;
+    }
+    if(w.includes("_")){
+      console.log(`[WARNING] ${w} in ${lang} is not a valid word`);
+      return;
+    }
+    words.add(w);
+  });
+  gWords += words.size;
+  Game.GlobalWords.set(lang,words);
+}
+console.log(`Loaded and registered ${Game.GlobalWords.size} languages with ${gWords} global words`);
+delete gWords;
+
+console.log("Loading random nicks...");
+let gNicks = 0;
+const nicksPath = path.join(__dirname, 'nicks');
+const nicksFiles = fs.readdirSync(nicksPath).filter(file => file.endsWith('.txt') && !file.startsWith('!'));
+for (const file of nicksFiles) {
+  const filePath = path.join(nicksPath, file);
+  const lang = file.replace(".txt","");
+  const nicks = new Set();
+  fs.readFileSync(filePath, 'utf8').split(/\r?\n/).forEach((n)=>{
+    if(n.trim().length == 0 || n.startsWith("#")){
+      return;
+    }
+    nicks.add(n);
+  });
+  gNicks += nicks.size;
+  Game.GlobalNicks.set(lang,nicks);
+}
+console.log(`Loaded and registered ${Game.GlobalNicks.size} languages with ${gNicks} random nicks`);
+delete gNicks;
 
 const postEventsPath = path.join(__dirname, 'events', 'post');
 const postEventFiles = fs.readdirSync(postEventsPath).filter(file => file.endsWith('.js') && !file.startsWith('!'));

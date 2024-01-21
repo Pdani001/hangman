@@ -1,0 +1,55 @@
+#game-wrapper {
+    grid-template-areas:
+    "bar     bar    bar " 
+    "players canvas chat";
+    grid-template-columns: minmax(125px,190px) auto minmax(125px,280px);
+}
+
+#join-panel {
+    width: 25%;
+}
+
+@media (orientation: portrait) {
+    #game-wrapper {
+        grid-template-areas:
+            "bar     bar   " 
+            "canvas  canvas" 
+            "players chat  ";
+            grid-template-columns: calc(50% - calc(1vh * 0.7) * .5) calc(50% - calc(1vh * 0.7) * .5);
+            grid-template-rows: calc(1vh * 5) min-content 1fr;
+    }
+    #join-panel {
+        width: 75%;
+    }
+    #chat-wrapper {
+        min-height: 256px;
+        min-width: 64px;
+    }
+    #player-list {
+        min-width: 0px;
+    }
+}
+
+#word-display > span + span {
+    margin-left: .3em;
+}
+#chat-field > p {
+    padding: 5px;
+    margin: 0;
+}
+#chat-field > p:nth-child(2n) {
+    background-color: var(--bs-dark-bg-subtle);
+}
+.player-container.active {
+    border: 3px solid var(--bs-success);
+}
+.player-container.active.self {
+    animation-name: jump;
+    animation-duration: 0.3s;
+}
+
+@keyframes jump {
+    0% { transform: scale(1) }
+    50% { transform: scale(1.1) }
+    100% { transform: scale(1) }
+}
