@@ -101,20 +101,20 @@ $(document).on("launch_game",function(){
 let PlayerData = null;
 let GameData = null;
 let AudioData = {
-    click: new Audio(location.origin+"/sfx/click.wav"),
-    blip: new Audio(location.origin+"/sfx/blip.wav"),
-    playerJoin: new Audio(location.origin+"/sfx/playerJoin.wav"),
-    playerLeave: new Audio(location.origin+"/sfx/playerLeave.wav"),
-    letterMiss: new Audio(location.origin+"/sfx/letterMiss.wav"),
-    letterFound: new Audio(location.origin+"/sfx/letterFound.wav"),
-    gameOver: new Audio(location.origin+"/sfx/gameOver.wav"),
-    gameStart: new Audio(location.origin+"/sfx/gameStart.wav"),
-    wordFound: new Audio(location.origin+"/sfx/wordFound.wav"),
-    nextPlayer: new Audio(location.origin+"/sfx/nextPlayer.wav"),
+    click: new Audio(location.origin+location.pathname+"sfx/click.wav"),
+    blip: new Audio(location.origin+location.pathname+"/sfx/blip.wav"),
+    playerJoin: new Audio(location.origin+location.pathname+"/sfx/playerJoin.wav"),
+    playerLeave: new Audio(location.origin+location.pathname+"/sfx/playerLeave.wav"),
+    letterMiss: new Audio(location.origin+location.pathname+"/sfx/letterMiss.wav"),
+    letterFound: new Audio(location.origin+location.pathname+"/sfx/letterFound.wav"),
+    gameOver: new Audio(location.origin+location.pathname+"/sfx/gameOver.wav"),
+    gameStart: new Audio(location.origin+location.pathname+"/sfx/gameStart.wav"),
+    wordFound: new Audio(location.origin+location.pathname+"/sfx/wordFound.wav"),
+    nextPlayer: new Audio(location.origin+location.pathname+"/sfx/nextPlayer.wav"),
 };
 
 function createGameSocket(){
-    const socket = io({query: {lang:_LANG}});
+    const socket = io({query: {lang:_LANG}, path: location.pathname+"socket.io"});
     socket.on("connect", () => {
         $("#gameCode").val($("#gameCode").data("hover"));
         socket.emit("set-nick", PlayerData?.Nickname);
