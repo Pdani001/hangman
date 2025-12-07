@@ -1,9 +1,10 @@
 {
     "compilerOptions": {
       "target": "ESNext",
-      "module": "CommonJS",
+      "module": "nodenext",
       "sourceMap": true,
       "esModuleInterop": true,
-      "skipLibCheck": true
+      "skipLibCheck": true,
+      "moduleResolution": "nodenext"
     }
 }

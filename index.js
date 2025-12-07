@@ -1,25 +1,31 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { Server } = require("socket.io");
+"use strict";
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'url';
+import { join, dirname } from 'node:path';
+import { Server } from "socket.io";
 
-const express = require("express");
-const bodyParser = require('body-parser');
-const cookieParser = require("cookie-parser");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+import express, { static as serveStatic } from "express";
+import body_parser from 'body-parser';
+const {json} = body_parser;
+import cookieParser from "cookie-parser";
 const web = express();
 
-const Game = require("./game");
-const Player = require('./player');
+import Game from "./game.js";
+import Player from './player.js';
 
 
 console.log("Loading global words...");
 let gWords = 0;
-const wordsPath = path.join(__dirname, 'words');
-const wordsFiles = fs.readdirSync(wordsPath).filter(file => file.endsWith('.txt') && !file.startsWith('!'));
+const wordsPath = join(__dirname, 'words');
+const wordsFiles = readdirSync(wordsPath).filter(file => file.endsWith('.txt') && !file.startsWith('!'));
 for (const file of wordsFiles) {
-  const filePath = path.join(wordsPath, file);
+  const filePath = join(wordsPath, file);
   const lang = file.replace(".txt","");
   const words = new Set();
-  fs.readFileSync(filePath, 'utf8').split(/\r?\n/).forEach((w)=>{
+  readFileSync(filePath, 'utf8').split(/\r?\n/).forEach((w)=>{
     if(w.trim().length == 0 || w.startsWith("#")){
       return;
     }
@@ -33,17 +39,16 @@ for (const file of wordsFiles) {
   Game.GlobalWords.set(lang,words);
 }
 console.log(`Loaded and registered ${Game.GlobalWords.size} languages with ${gWords} global words`);
-delete gWords;
 
 console.log("Loading random nicks...");
 let gNicks = 0;
-const nicksPath = path.join(__dirname, 'nicks');
-const nicksFiles = fs.readdirSync(nicksPath).filter(file => file.endsWith('.txt') && !file.startsWith('!'));
+const nicksPath = join(__dirname, 'nicks');
+const nicksFiles = readdirSync(nicksPath).filter(file => file.endsWith('.txt') && !file.startsWith('!'));
 for (const file of nicksFiles) {
-  const filePath = path.join(nicksPath, file);
+  const filePath = join(nicksPath, file);
   const lang = file.replace(".txt","");
   const nicks = new Set();
-  fs.readFileSync(filePath, 'utf8').split(/\r?\n/).forEach((n)=>{
+  readFileSync(filePath, 'utf8').split(/\r?\n/).forEach((n)=>{
     if(n.trim().length == 0 || n.startsWith("#")){
       return;
     }
@@ -53,15 +58,14 @@ for (const file of nicksFiles) {
   Game.GlobalNicks.set(lang,nicks);
 }
 console.log(`Loaded and registered ${Game.GlobalNicks.size} languages with ${gNicks} random nicks`);
-delete gNicks;
 
-const postEventsPath = path.join(__dirname, 'events', 'post');
-const postEventFiles = fs.readdirSync(postEventsPath).filter(file => file.endsWith('.js') && !file.startsWith('!'));
+const postEventsPath = join(__dirname, 'events', 'post');
+const postEventFiles = readdirSync(postEventsPath).filter(file => file.endsWith('.js') && !file.startsWith('!'));
 
 const postEvents = new Map();
 for (const file of postEventFiles) {
-  const filePath = path.join(postEventsPath, file);
-  const event = require(filePath);
+  const filePath = join(postEventsPath, file);
+  const event = await import(pathToFileURL(filePath));
   if ('name' in event && 'execute' in event){
     postEvents.set(event.name, event);
   } else {
@@ -69,9 +73,9 @@ for (const file of postEventFiles) {
   }
 }
 
-web.use(bodyParser.json());
+web.use(json());
 web.use(cookieParser());
-web.post("/api/*", function (req, res, next) {
+web.post("/api/*path", function (req, res, next) {
   if ('POST' != req.method){
       return next();
   }
@@ -96,20 +100,20 @@ web.post("/api/*", function (req, res, next) {
 
   return event.execute(req.body,res);
 });
-web.use(express.static(path.join(__dirname, 'public_html')));
+web.use(serveStatic(join(__dirname, 'public_html')));
 const http = web.listen(process.env.PORT);
 if(http.listening){
   console.log("HTTP/Socket server is listening on port "+http.address().port);
 }
 const io = new Server(http, { /* options */ });
 
-const wsEventsPath = path.join(__dirname, 'events', 'socket');
-const wsEventFiles = fs.readdirSync(wsEventsPath).filter(file => file.endsWith('.js') && !file.startsWith('!'));
+const wsEventsPath = join(__dirname, 'events', 'socket');
+const wsEventFiles = readdirSync(wsEventsPath).filter(file => file.endsWith('.js') && !file.startsWith('!'));
 
 const wsEvents = new Map();
 for (const file of wsEventFiles) {
-  const filePath = path.join(wsEventsPath, file);
-  const event = require(filePath);
+  const filePath = join(wsEventsPath, file);
+  const event = await import(pathToFileURL(filePath));
   if ('name' in event && 'execute' in event){
     wsEvents.set(event.name, event);
   } else {

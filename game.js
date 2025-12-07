@@ -1,12 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-const uuid_1 = require("uuid");
-const grapheme_splitter_1 = __importDefault(require("grapheme-splitter"));
-const node_crypto_1 = require("node:crypto");
-class Game {
-    static splitter = new grapheme_splitter_1.default();
+import { v4 as uuid } from 'uuid';
+import GraphemeSplitter from 'grapheme-splitter';
+import { randomInt } from 'node:crypto';
+export default class Game {
+    static splitter = new GraphemeSplitter();
     static List = new Map();
     static GlobalWords = new Map();
     static GlobalNicks = new Map();
@@ -56,7 +52,7 @@ class Game {
     Players = new Set();
     Owner;
     constructor(owner, id) {
-        this.Id = id || (0, uuid_1.v4)().split("-")[0];
+        this.Id = id || uuid().split("-")[0];
         this.Owner = owner;
         this.Players.add(this.Owner);
         Game.List.set(this.Id, this);
@@ -138,7 +134,7 @@ class Game {
             }
         }
         if (this.NextPlayer == null) {
-            this.NextPlayer = [...this.Players][next ? 0 : (0, node_crypto_1.randomInt)(this.Players.size)];
+            this.NextPlayer = [...this.Players][next ? 0 : randomInt(this.Players.size)];
         }
         if (this.DelayNextPlayer) {
             let _countdown = 3;
@@ -201,14 +197,13 @@ class Game {
             this.OldWords.clear();
             this.OldWords.add(this.Word);
         }
-        this.Word = _words[(0, node_crypto_1.randomInt)(_words.length)];
+        this.Word = _words[randomInt(_words.length)];
         while (this.OldWords.has(this.Word)) {
-            this.Word = _words[(0, node_crypto_1.randomInt)(_words.length)];
+            this.Word = _words[randomInt(_words.length)];
         }
         this.CurrentRound++;
         this.nextPlayer(io);
         io.to(`game:${this.Id}`).emit("game:start", this.Info);
     }
 }
-module.exports = Game;
 //# sourceMappingURL=game.js.map

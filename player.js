@@ -1,6 +1,5 @@
-"use strict";
-const uuid_1 = require("uuid");
-class Player {
+import { v4 as uuid } from 'uuid';
+export default class Player {
     static List = new Map();
     Id;
     Nickname = null;
@@ -9,7 +8,7 @@ class Player {
     GameId;
     Language;
     constructor(socket, nick) {
-        this.Id = (0, uuid_1.v4)().split("-")[0];
+        this.Id = uuid().split("-")[0];
         socket['Player'] = this.Id;
         this.Socket = socket;
         this.Nickname = nick || null;
@@ -24,5 +23,4 @@ class Player {
         };
     }
 }
-module.exports = Player;
 //# sourceMappingURL=player.js.map

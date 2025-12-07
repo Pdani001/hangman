@@ -1,9 +1,9 @@
 import {v4 as uuid} from 'uuid';
-import Player from './player';
+import Player from './player.js';
 import GraphemeSplitter from 'grapheme-splitter';
 import { Server } from 'socket.io';
 import { randomInt } from 'node:crypto';
-class Game {
+export default class Game {
     private static readonly splitter = new GraphemeSplitter()
     static readonly List: Map<string,Game> = new Map();
     static readonly GlobalWords: Map<string,Set<string>> = new Map();
@@ -223,4 +223,3 @@ class Game {
         io.to(`game:${this.Id}`).emit("game:start",this.Info);
     }
 }
-export = Game;

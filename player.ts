@@ -1,6 +1,6 @@
 import {v4 as uuid} from 'uuid';
 import { Socket } from 'socket.io';
-class Player {
+export default class Player {
     static readonly List: Map<string,Player> = new Map();
     readonly Id: string;
     Nickname?: string = null;
@@ -25,5 +25,3 @@ class Player {
         }
     }
 }
-
-export = Player;
