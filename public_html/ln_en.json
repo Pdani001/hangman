@@ -1,6 +1,8 @@
 {
     "game_title": "Squirrel Hangman",
     "label_nickname": "Nickname:",
+    "label_code_input": "Code:",
+    "placeholder_code_input": "8 characters",
     "btn_join_game": "Join",
     "btn_create_game": "New private game",
     "player_points": "{0} points",

@@ -1,6 +1,8 @@
 {
     "game_title": "Mókus Akasztófa",
     "label_nickname": "Becenév:",
+    "label_code_input": "Kód:",
+    "placeholder_code_input": "8 karakter",
     "btn_join_game": "Indulás",
     "btn_create_game": "Új privát szoba",
     "player_points": "{0} pont",

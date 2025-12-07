@@ -94,6 +94,10 @@ $(document).on("launch_game",function(){
         AudioData.click.volume = Volume/100;
         AudioData.click.play();
     });
+    $("#code_input").on('input',function(){
+        if($(this).val().length > 8)
+            $(this).val($(this).val().slice(0,8));
+    });
     $("#volumeRange").prev("label").text(_LN['label_volume'].format(100));
     $("#loading-container").hide().removeClass("d-flex");
 });
@@ -142,7 +146,10 @@ function createGameSocket(){
             socket.emit("create-game");
             return;
         }
-        const code = location.search.slice(1);
+        var code = location.search.slice(1);
+        if(code.length < 8){
+            code = $("#code_input").val();
+        }
         if(code.length == 8){
             socket.emit("join-game", code);
         } else {
